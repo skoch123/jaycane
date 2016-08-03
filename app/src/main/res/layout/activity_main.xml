@@ -17,4 +17,9 @@
         android:id="@+id/codeText"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
+    <ListView
+        android:id="@+id/lvContacts"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    </ListView>
 </RelativeLayout>

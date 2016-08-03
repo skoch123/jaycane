@@ -10,7 +10,7 @@ import android.database.sqlite.SQLiteOpenHelper;
  */
 public class DBHelper extends SQLiteOpenHelper {
     private static final String DATABASE_NAME = "jaycane.db"; // название бд
-    private static final int VERSION = 2; // версия базы данных
+    private static final int VERSION = 3; // версия базы данных
 
     public DBHelper(Context context) {
         super(context, DATABASE_NAME, null, VERSION);

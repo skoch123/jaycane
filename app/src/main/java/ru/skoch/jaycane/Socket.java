@@ -1,62 +1,109 @@
 package ru.skoch.jaycane;
 
+
+import android.os.AsyncTask;
+
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
+import java.net.*;
 
 /**
- * Created by root on 26.07.16.
+ * Created by root on 27.07.16.
  */
-public class Socket implements Runnable {
+public class Socket extends AsyncTask<Void,Integer,Void> {
 
-    DatagramSocket socket;
+    DatagramSocket sock;
+    InetAddress ia;
+    int port;
     int localport;
-    InetAddress server;
-    int serverPort;
-    String code="sdfadfadf";
+    byte[] msg;
+    String response;
+    String host;
+    Handler h = new Handler();
 
-
-    public Socket(int localport,String server){
+    public Socket(int localport, String remoteHost){
         this.localport=localport;
-        String[] str=server.split(":");
+        String[] host=remoteHost.split(":");
+        this.port = Integer.parseInt(host[1]);
+        this.host = host[0];
+        System.out.println("host: " + this.host);
+
+
+
         try {
-            this.server = InetAddress.getByName(str[0]);
+            ia=InetAddress.getByName(this.host);
         } catch (UnknownHostException e) {
             e.printStackTrace();
         }
-        serverPort=Integer.parseInt(str[1]);
-
     }
 
     public void createSocket(){
-
         try {
-            DatagramSocket socket = new DatagramSocket(localport);
-
+            try {
+                sock = new DatagramSocket(localport,InetAddress.getByName("0.0.0.0"));
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+            System.out.println("port: " + sock.getPort());
         } catch (SocketException e) {
             e.printStackTrace();
         }
+    }
 
+    public void send(DatagramPacket dp){
+        try {
+            sock.send(dp);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
+    public String receive(){
+        DatagramPacket p = new DatagramPacket(new byte[1024],1024);
+        try {
+            sock.receive(p);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        byte[] data = new byte[p.getLength()];
+        System.arraycopy(p.getData(), p.getOffset(), data, 0, p.getLength());
+        return new String(data);
+    }
+    public void close(){
+        sock.close();
+    }
+/*
+    @Override
+    public void run() {
+        while(true){
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            //this.response=receive();
+            //h.handler(this.response);
+
+        }
+    }
+*/
+
+    @Override
+    protected Void doInBackground(Void... voids) {
+        while(true) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            this.response = receive();
+            System.out.println("I'm alive!");
+            publishProgress(0);
+        }
     }
 
     @Override
-    public void run() {
-            createSocket();
-            while(true){
-                try {
-                    socket.send(new DatagramPacket(code.getBytes(),code.getBytes().length,server,serverPort));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+    protected void onProgressUpdate(Integer... progress) {
+        System.out.println("I'm alive too!");
+        h.handler(this.response);
     }
 }
