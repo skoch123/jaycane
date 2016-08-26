@@ -16,7 +16,7 @@ public class Socket extends AsyncTask<Void,Integer,Void> {
     int port;
     int localport;
     byte[] msg;
-    String response;
+    Packet response;
     String host;
     Handler h = new Handler();
 
@@ -54,11 +54,14 @@ public class Socket extends AsyncTask<Void,Integer,Void> {
             sock.send(dp);
         } catch (IOException e) {
             e.printStackTrace();
+        }catch (NullPointerException e){
+            createSocket();
         }
+
     }
 
-    public String receive(){
-        DatagramPacket p = new DatagramPacket(new byte[1024],1024);
+    public Packet receive(){
+        DatagramPacket p = new DatagramPacket(new byte[256],256);
         try {
             sock.receive(p);
         } catch (IOException e) {
@@ -66,7 +69,7 @@ public class Socket extends AsyncTask<Void,Integer,Void> {
         }
         byte[] data = new byte[p.getLength()];
         System.arraycopy(p.getData(), p.getOffset(), data, 0, p.getLength());
-        return new String(data);
+        return new Packet(new String(data),p.getAddress().getHostAddress(),p.getPort());
     }
     public void close(){
         sock.close();
@@ -90,20 +93,18 @@ public class Socket extends AsyncTask<Void,Integer,Void> {
     @Override
     protected Void doInBackground(Void... voids) {
         while(true) {
-            try {
-                Thread.sleep(1000);
+            /*try {
+                Thread.sleep(50);
             } catch (InterruptedException e) {
                 e.printStackTrace();
-            }
+            }*/
             this.response = receive();
-            System.out.println("I'm alive!");
             publishProgress(0);
         }
     }
 
     @Override
     protected void onProgressUpdate(Integer... progress) {
-        System.out.println("I'm alive too!");
         h.handler(this.response);
     }
 }

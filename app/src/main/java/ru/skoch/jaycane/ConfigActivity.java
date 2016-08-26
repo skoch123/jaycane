@@ -34,16 +34,9 @@ public class ConfigActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 System.out.println("account: "  + dbHelper.getAccount(db));
-                if(dbHelper.getAccount(db)==null){
                     dbHelper.createAccount(db,CodeGenerator.generate());
                     finish();
                     startActivity(getIntent());
-                }
-                else{
-                    dbHelper.createAccount(db,CodeGenerator.generate());
-                    finish();
-                    startActivity(getIntent());
-                }
             }
         };
         genCodeButton.setOnClickListener(oclGenCodeButton);
@@ -52,7 +45,7 @@ public class ConfigActivity extends AppCompatActivity {
 
         if(dbHelper.getAccount(db)!=null){
             codeText = (TextView) findViewById(R.id.codeText);
-            codeText.setText("Current code: " + dbHelper.getAccount(db));
+            codeText.setText(dbHelper.getAccount(db));
         }
         else{
             codeText.setText("Необходимо сгенерировать код аккаунта");

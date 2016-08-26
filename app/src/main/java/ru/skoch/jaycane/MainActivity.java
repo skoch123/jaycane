@@ -1,14 +1,18 @@
 package ru.skoch.jaycane;
 
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.database.sqlite.SQLiteDatabase;
+import android.text.Editable;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -25,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
     ArrayAdapter<String> adapter;
     TextView codeText;
     ContactList cl;
+    Client c;
+    HashMap contacts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,13 +46,13 @@ public class MainActivity extends AppCompatActivity {
         db = dbHelper.getWritableDatabase();
 
 
-        HashMap<String, String> contacts = new HashMap<String, String>();
-        System.out.println("localport: " + dbHelper.getProperty(db,"localport"));
+        contacts = dbHelper.getContacts(db);
         int localPort=Integer.parseInt(dbHelper.getProperty(db,"localport"));
         String server=dbHelper.getProperty(db,"server");
         Socket s = new Socket(localPort,server);
-
-        Client c = new Client(s,"{\"code\":\"" + dbHelper.getAccount(db) +"\"}");
+        c=Client.getInstance();
+        c.createDpCode(s, dbHelper.getAccount(db) );
+        //c.setChatActivity(this);
         cl = ContactList.getInstance();
 
         s.createSocket();
@@ -57,22 +63,29 @@ public class MainActivity extends AppCompatActivity {
         s.execute();
 
         adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,cl.getNameList());
-        adapter.add("first");
+        adapter.add("Connecting...");
         contactsLv.setAdapter(adapter);
         adapter.setNotifyOnChange(true);
-
-        cl.setContactsUpdateListener(new ContactsUpdateListener() {
+        contactsLv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onContactsUpdate() {
-                System.out.println("sizeof cl: " + cl.size());
-                if(cl.size()>0)
-                    System.out.println(cl.getNameList().get(0));
-                adapter.clear();
-                adapter.addAll(cl.getNameList());
-                adapter.notifyDataSetChanged();
-                contactsLv.invalidateViews();
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                startChat(dbHelper.getCodeByName(db,(String) adapterView.getAdapter().getItem(i)));
             }
         });
+
+
+
+                cl.setContactsUpdateListener(new ContactsUpdateListener() {
+                    @Override
+                    public void onContactsUpdate() {
+
+                        adapter.clear();
+
+                        adapter.addAll(contacts.values());
+                        adapter.notifyDataSetChanged();
+                        contactsLv.invalidateViews();
+                    }
+                });
 
 
 
@@ -92,6 +105,42 @@ public class MainActivity extends AppCompatActivity {
             this.startActivity(intent);
             return true;
         }
+        if(item.getItemId()==R.id.menu_add_contact){
+            ContactDialog cd = new ContactDialog(this);
+            cd.show();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
+    }
+
+    public void startChat(String contactId){
+        System.out.println("Contact is " + contactId);
+        Intent intent = new Intent(this, ChatActivity.class);
+        intent.putExtra("contactId",contactId);
+        intent.putExtra("myContactId",dbHelper.getAccount(db));
+        this.startActivity(intent);
+    }
+
+    public void exit(View view)
+    {
+        System.exit(0);
+    }
+
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        System.exit(0);
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        System.exit(0);
+    }
+
+    public String createContact(String id, String name){
+        dbHelper.createContact(db,id,name);
+        contacts=dbHelper.getContacts(db);
+        return "Success";
     }
 }

@@ -25,6 +25,7 @@
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:id="@+id/codeText"
+        android:textIsSelectable="true"
         android:layout_below="@+id/genCodeButton"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"

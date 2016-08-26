@@ -8,8 +8,13 @@
         android:title="Main menu"
         app:showAsAction="never"/>
     <item
-        android:id="@+id/menu_config"
+        android:id="@+id/menu_add_contact"
         android:orderInCategory="200"
+        android:title="Add contact"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/menu_config"
+        android:orderInCategory="300"
         android:title="Configuration"
         app:showAsAction="never"/>
 </menu>
